@@ -65,7 +65,6 @@ class RpcClientTest extends BaseTest
         $queueNameReflection = new \ReflectionProperty(RpcClient::class, 'queueName');
         $queueNameReflection->setAccessible(true);
         $queueNameReflection->setValue($this->client, $queueName);
-        //$this->setReflectionProperty($this->client, 'queueName', $queueName);
 
         $this->client
             ->addRequest($message, $server, $requestId, $routingKey);
@@ -73,7 +72,6 @@ class RpcClientTest extends BaseTest
         $requestsReflection = new \ReflectionProperty(RpcClient::class, 'requests');
         $requestsReflection->setAccessible(true);
         $requests = $requestsReflection->getValue($this->client);
-        //$requests = $this->getReflectionPropertyValue($this->client, 'requests');
 
         $this->assertEquals(1, $requests);
     }
