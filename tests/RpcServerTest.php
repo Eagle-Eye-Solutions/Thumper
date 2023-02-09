@@ -23,7 +23,7 @@ class RpcServerTest extends BaseTest
      */
     private $server;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->mockConnection = $this->getMockConnection();
 
@@ -87,7 +87,7 @@ class RpcServerTest extends BaseTest
         $this->mockChannel
             ->expects($this->once())
             ->method('queue_bind')
-            ->with($queueName, $name . '-exchange', '', false, null, null);
+            ->with($queueName, $name . '-exchange', '', false, [], null);
 
         $this->mockChannel
             ->expects($this->once())
@@ -207,26 +207,27 @@ class RpcServerTest extends BaseTest
         $deliveryTag = uniqid('deliveryTag', true);
         $result = uniqid('result', true);
         $correlationId = uniqid('correlationId', true);
-        $this->mockChannel
-            ->expects($this->at(1))
-            ->method('basic_publish')
-            ->willThrowException($expectedException);
+
+        $this->expectException(get_class($expectedException));
 
         $this->mockChannel
-            ->expects($this->at(2))
-            ->method('basic_publish')
-            ->with(
-                static::callback(function (AMQPMessage $message) use ($expectedException) {
-                    return $message->body === 'error: '. $expectedException->getMessage();
-                }),
-                '',
-                $replyTo,
-                false,
-                false,
-                null
-            );
+            ->expects(self::any())->method('basic_publish')
+            ->withConsecutive(
+                [],
+                [
+                    static::callback(function (AMQPMessage $message) use ($expectedException) {
+                        return ($message->body === 'error: '. $expectedException->getMessage());
+                    }),
+                    '',
+                    $replyTo,
+                    false,
+                    false,
+                    null
+                ]
+            )->willThrowException($expectedException);
 
         $message = new AMQPMessage($body);
+        $message->setChannel($this->mockChannel);
         $message->delivery_info['channel'] = $this->mockChannel;
         $message->delivery_info['reply_to'] = $replyTo;
         $message->delivery_info['delivery_tag'] = $deliveryTag;

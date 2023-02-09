@@ -14,8 +14,12 @@ class AnonConsumerTest extends BaseTest
 
         $consumer = new AnonConsumer($connection);
 
-        $this->assertAttributeSame(
-            array(
+        $queueOptionsReflectionProperty = new \ReflectionProperty(AnonConsumer::class, 'queueOptions');
+        $queueOptionsReflectionProperty->setAccessible(true);
+        $queueOptionsValue = $queueOptionsReflectionProperty->getValue($consumer);
+
+        $this->assertSame(
+            [
                 'name' => '',
                 'passive' => false,
                 'durable' => false,
@@ -24,11 +28,14 @@ class AnonConsumerTest extends BaseTest
                 'nowait' => false,
                 'arguments' => null,
                 'ticket' => null
-            ),
-            'queueOptions',
-            $consumer
+            ],
+            $queueOptionsValue
         );
 
-        $this->assertAttributeSame($connection, 'connection', $consumer);
+        $connectionReflectionProperty = new \ReflectionProperty(AnonConsumer::class, 'connection');
+        $connectionReflectionProperty->setAccessible(true);
+        $connectionValue = $connectionReflectionProperty->getValue($consumer);
+
+        $this->assertSame($connection, $connectionValue);
     }
 }

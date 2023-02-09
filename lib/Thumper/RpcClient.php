@@ -45,7 +45,7 @@ class RpcClient extends BaseAmqp
     /**
      * @var string[]
      */
-    protected $replies;
+    protected $replies = [];
 
     /**
      * @var string

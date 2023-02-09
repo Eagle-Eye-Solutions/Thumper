@@ -13,11 +13,11 @@ class RpcClientTest extends BaseTest
     public $client;
 
     /**
-     * @var AMQPChannel|\PHPUnit_Framework_MockObject_MockObject
+     * @var AMQPChannel|\PHPUnit\Framework\MockObject\MockObject
      */
     private $mockChannel;
 
-    public function setUp()
+    public function setUp(): void
     {
         $mockConnection = $this->getMockConnection();
         $this->mockChannel = $this->getMockChannel();
@@ -62,24 +62,30 @@ class RpcClientTest extends BaseTest
                 $routingKey
             );
 
-        $this->setReflectionProperty($this->client, 'queueName', $queueName);
+        $queueNameReflection = new \ReflectionProperty(RpcClient::class, 'queueName');
+        $queueNameReflection->setAccessible(true);
+        $queueNameReflection->setValue($this->client, $queueName);
 
         $this->client
             ->addRequest($message, $server, $requestId, $routingKey);
 
-        $requests = $this->getReflectionPropertyValue($this->client, 'requests');
+        $requestsReflection = new \ReflectionProperty(RpcClient::class, 'requests');
+        $requestsReflection->setAccessible(true);
+        $requests = $requestsReflection->getValue($this->client);
+
         $this->assertEquals(1, $requests);
     }
 
     /**
      * @param mixed $requestId
      * @test
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage You must provide a request ID
      * @dataProvider requestIdDataProvider
      */
     public function addRequestWithInvalidRequestId($requestId)
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('You must provide a request ID');
+
         $this->client
             ->addRequest('messageBody', 'server', $requestId);
     }
@@ -109,7 +115,10 @@ class RpcClientTest extends BaseTest
     public function getReplies($requests)
     {
         $queueName = uniqid('queueName', true);
-        $this->setReflectionProperty($this->client, 'queueName', $queueName);
+
+        $qnTest = new \ReflectionProperty(RpcClient::class, 'queueName');
+        $qnTest->setAccessible(true);
+        $qnTest->setValue($this->client, $queueName);
 
         $this->mockChannel
             ->expects($this->once())
@@ -122,9 +131,11 @@ class RpcClientTest extends BaseTest
             ->method('wait')
             ->with(null, false, null)
             ->willReturnCallback(function () use ($self) {
-                $replies = $self->getReflectionPropertyValue($self->client, 'replies');
+                $repliesReflection = new \ReflectionProperty(RpcClient::class, 'replies');
+                $repliesReflection->setAccessible(true);
+                $replies = $repliesReflection->getValue($self->client);
                 $replies[] = 'reply';
-                $self->setReflectionProperty($self->client, 'replies', $replies);
+                $repliesReflection->setValue($self->client, $replies);
             });
 
         $this->mockChannel
@@ -132,7 +143,9 @@ class RpcClientTest extends BaseTest
             ->method('basic_cancel')
             ->with($queueName);
 
-        $this->setReflectionProperty($this->client, 'requests', $requests);
+        $requestsReflection = new \ReflectionProperty(RpcClient::class, 'requests');
+        $requestsReflection->setAccessible(true);
+        $requestsReflection->setValue($this->client, $requests);
 
         $replies = $this->client
             ->getReplies();
@@ -147,13 +160,16 @@ class RpcClientTest extends BaseTest
     {
         $body = uniqid('body', true);
         $correlationId = uniqid('correlationid', true);
-        $mockMessage = new AMQPMessage($body, array('correlation_id' => $correlationId));
+        $mockMessage = new AMQPMessage($body, ['correlation_id' => $correlationId]);
 
         $this->client
             ->processMessage($mockMessage);
 
-        $replies = $this->getReflectionPropertyValue($this->client, 'replies');
-        $this->assertEquals(array($correlationId => $body), $replies);
+        $rTest = new \ReflectionProperty(RpcClient::class, 'replies');
+        $rTest->setAccessible(true);
+        $replies = $rTest->getValue($this->client);
+
+        $this->assertEquals([$correlationId => $body], $replies);
     }
 
     /**
@@ -165,7 +181,10 @@ class RpcClientTest extends BaseTest
         $this->client
             ->setTimeout($timeout);
 
-        $requestTimeout = $this->getReflectionPropertyValue($this->client, 'requestTimeout');
+        $requestTimeoutReflection = new \ReflectionProperty(RpcClient::class, 'requestTimeout');
+        $requestTimeoutReflection->setAccessible(true);
+        $requestTimeout = $requestTimeoutReflection->getValue($this->client);
+
         $this->assertEquals($timeout, $requestTimeout);
     }
 
@@ -206,7 +225,8 @@ class RpcClientTest extends BaseTest
      */
     public function setExchangeOptionsThrowsExceptions($key, $options)
     {
-        $this->setExpectedException('\InvalidArgumentException', 'You must provide an exchange ' . $key);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('You must provide an exchange ' . $key);
 
         $this->client
             ->setExchangeOptions($options);
@@ -286,14 +306,14 @@ class RpcClientTest extends BaseTest
      */
     public function getRepliesDataProvider()
     {
-        return array(
-            array(0),
-            array(1),
-            array(2)
-        );
+        return [
+            [0],
+            [1],
+            [2]
+        ];
     }
 
-    public function setExchangeOptionsExceptionDataProvider()
+    public function setExchangeOptionsExceptionDataProvider(): array
     {
         return array(
             array(

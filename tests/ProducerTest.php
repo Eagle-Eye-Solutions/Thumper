@@ -25,7 +25,7 @@ class ProducerTest extends BaseTest
      */
     private $mockChannel;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->mockConnection = $this->getMockConnection();
         $this->mockChannel = $this->getMockChannel();
@@ -47,7 +47,7 @@ class ProducerTest extends BaseTest
         $body = uniqid('body', true);
         $exchangeName = uniqid('exchangeName', true);
         $exchangeType = uniqid('exchangeType', true);
-        
+
         $this->producer
             ->setExchangeOptions(array(
                 'name' => $exchangeName,
@@ -69,7 +69,7 @@ class ProducerTest extends BaseTest
                 $exchangeName,
                 ''
             );
-        
+
         $this->producer
             ->publish($body);
     }
@@ -82,7 +82,8 @@ class ProducerTest extends BaseTest
      */
     public function publishThrowsExceptionWhenDeclaringExchange(\Exception $exception)
     {
-        $this->setExpectedException(get_class($exception), $exception->getMessage());
+        $this->expectException(get_class($exception));
+        $this->expectExceptionMessage($exception->getMessage());
         $body = uniqid('body', true);
         $exchangeName = uniqid('exchangeName', true);
         $exchangeType = uniqid('exchangeType', true);
@@ -115,7 +116,8 @@ class ProducerTest extends BaseTest
      */
     public function publishThrowsExceptionWhenPublishingMessage(\Exception $exception)
     {
-        $this->setExpectedException(get_class($exception), $exception->getMessage());
+        $this->expectException(get_class($exception));
+        $this->expectExceptionMessage($exception->getMessage());
 
         $body = uniqid('body', true);
         $exchangeName = uniqid('exchangeName', true);
