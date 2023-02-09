@@ -16,16 +16,16 @@ class ConsumerTest extends BaseTest
     private $consumer;
 
     /**
-     * @var AMQPStreamConnection|\PHPUnit_Framework_MockObject_MockObject
+     * @var AMQPStreamConnection|\PHPUnit\Framework\MockObject\MockObject
      */
     private $mockConnection;
 
     /**
-     * @var AMQPChannel|\PHPUnit_Framework_MockObject_MockObject
+     * @var AMQPChannel|\PHPUnit\Framework\MockObject\MockObject
      */
     public $mockChannel;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->mockConnection = $this->getMockConnection();
         $this->mockChannel = $this->getMockChannel();
@@ -87,7 +87,7 @@ class ConsumerTest extends BaseTest
             );
         $this->mockChannel
             ->expects($this->never())
-            ->method('queue_qos');
+            ->method('basic_qos');
 
         $this->consumer
             ->consume(1);
@@ -100,7 +100,8 @@ class ConsumerTest extends BaseTest
      */
     public function consumeWhenExchangeDeclareThrowsExceptions(\Exception $exception)
     {
-        $this->setExpectedException(get_class($exception), $exception->getMessage());
+        $this->expectException(get_class($exception));
+        $this->expectExceptionMessage($exception->getMessage());
         $name = uniqid('name', true);
 
         $this->consumer
@@ -129,7 +130,7 @@ class ConsumerTest extends BaseTest
             ->method('basic_consume');
         $this->mockChannel
             ->expects($this->never())
-            ->method('queue_qos');
+            ->method('basic_qos');
 
         $this->consumer
             ->consume(1);
@@ -142,7 +143,8 @@ class ConsumerTest extends BaseTest
      */
     public function consumeQueueDeclareThrowsException(\Exception $exception)
     {
-        $this->setExpectedException(get_class($exception), $exception->getMessage());
+        $this->expectException(get_class($exception));
+        $this->expectExceptionMessage($exception->getMessage());
         $name = uniqid('name', true);
 
         $this->consumer
@@ -177,7 +179,7 @@ class ConsumerTest extends BaseTest
             ->method('basic_consume');
         $this->mockChannel
             ->expects($this->never())
-            ->method('queue_qos');
+            ->method('basic_qos');
 
         $this->consumer
             ->consume(1);
@@ -190,7 +192,8 @@ class ConsumerTest extends BaseTest
      */
     public function consumeQueueBindThrowsExceptions(\Exception $exception)
     {
-        $this->setExpectedException(get_class($exception), $exception->getMessage());
+        $this->expectException(get_class($exception));
+        $this->expectExceptionMessage($exception->getMessage());
         $name = uniqid('name', true);
 
         $this->consumer
@@ -225,7 +228,7 @@ class ConsumerTest extends BaseTest
             ->method('basic_consume');
         $this->mockChannel
             ->expects($this->never())
-            ->method('queue_qos');
+            ->method('basic_qos');
 
         $this->consumer
             ->consume(1);
@@ -238,7 +241,8 @@ class ConsumerTest extends BaseTest
      */
     public function consumeBasicConsumeThrowsExceptions(\Exception $exception)
     {
-        $this->setExpectedException(get_class($exception), $exception->getMessage());
+        $this->expectException(get_class($exception));
+        $this->expectExceptionMessage($exception->getMessage());
         $name = uniqid('name', true);
 
         $this->consumer
@@ -273,7 +277,7 @@ class ConsumerTest extends BaseTest
             ->willThrowException($exception);
         $this->mockChannel
             ->expects($this->never())
-            ->method('queue_qos');
+            ->method('basic_qos');
 
         $this->consumer
             ->consume(1);
@@ -287,8 +291,8 @@ class ConsumerTest extends BaseTest
         $body = uniqid('body', true);
         $deliveryTag = uniqid('deliveryTag', true);
         $message = new AMQPMessage($body);
-        $message->delivery_info['channel'] = $this->mockChannel;
-        $message->delivery_info['delivery_tag'] = $deliveryTag;
+        $message->setChannel($this->mockChannel);
+        $message->setDeliveryTag($deliveryTag);
 
         $this->consumer
             ->setCallback(function () {});
@@ -316,9 +320,9 @@ class ConsumerTest extends BaseTest
         $consumerTag = uniqid('consumerTag', true);
 
         $message = new AMQPMessage($body);
-        $message->delivery_info['channel'] = $this->mockChannel;
-        $message->delivery_info['delivery_tag'] = $deliveryTag;
-        $message->delivery_info['consumer_tag'] = $consumerTag;
+        $message->setChannel($this->mockChannel);
+        $message->setDeliveryTag($deliveryTag);
+        $message->setConsumerTag($consumerTag);
 
         $this->consumer
             ->setCallback(function () {});
@@ -345,16 +349,21 @@ class ConsumerTest extends BaseTest
     public function setCallbackThrowsException()
     {
         $callback = uniqid('callback', true);
-        $this->setExpectedException('\Exception', 'Callback ' . $callback . ' is not callable.');
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Callback ' . $callback . ' is not callable.');
         $this->consumer
             ->setCallback($callback);
     }
 
     public function setUpConsumerExceptions()
     {
-        return array(
-            array(new AMQPOutOfBoundsException('Out of Bounds')),
-            array(new AMQPRuntimeException('Runtime Exception'))
-        );
+        return [
+            [
+                new AMQPOutOfBoundsException('Out of Bounds')
+            ],
+            [
+                new AMQPRuntimeException('Runtime Exception')
+            ]
+        ];
     }
 }
