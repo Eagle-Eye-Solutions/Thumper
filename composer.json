@@ -1,5 +1,5 @@
 {
-    "name": "php-amqplib/thumper",
+    "name": "eagle-eye-solutions/thumper",
     "replace": {
         "videlalvaro/thumper": "self.version"
     },
